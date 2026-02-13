@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { isAuthorized } from '@/utils/authorizations'
-import { AuthorizedActionsE } from '@/enums/authorized-actions-e'
-
+const { currentBusinessContact } = storeToRefs(useBcrosBusiness())
 const emit = defineEmits<{(e:'close'): void}>()
-
 const t = useNuxtApp().$i18n.t
+const arReminder = ref(true) // the saved value
+const isToggled = ref(true) // the toggle model value
+const isSaving = ref(false) // true while saving
+const isSaveError = ref(false) // true if there was a save error
 
 defineProps({
   display: { type: Boolean, required: true }
@@ -13,21 +14,24 @@ defineProps({
 const deleteErrorDialogOptions = computed(() => ({
   title: t('text.dialog.annualReportReminders.title'),
   text: '', // content slot is used instead
-  buttons: [] as DialogButtonI[] // button slot is used instead
+  buttons: [] as DialogButtonI[], // button slot is used instead
+  headerLeft: true
 }) as DialogOptionsI)
 
 const close = () => {
   emit('close')
 }
 
-const save = () => {
-  const success = true
-
-  console.log('save') // eslint-disable-line no-console
-
-  if (success) {
-    close()
-  }
+const save = async () => {
+  // const success = true
+  // if (success) {
+  //   close()
+  // }
+  isSaving.value = true
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  isSaveError.value = (Math.random() >= 0.5)
+  arReminder.value = !arReminder.value
+  isSaving.value = false
 }
 </script>
 
@@ -41,54 +45,100 @@ const save = () => {
   >
     <template #content>
       <div>
-        <h2 class="font-normal">
-          Email Reminders
+        <!-- email reminders -->
+        <h2 class="text-base">
+          {{ $t('text.dialog.annualReportReminders.section1') }}
         </h2>
-        <p class="text-bcGovGray-700">
-          A reminder to file your annual report before the due date
-        </p>
-      </div>
-      <UDivider class="my-6" />
-      <div>
-        <h2 class="font-normal">
-          Current Email Address
-        </h2>
-        <p class="text-bcGovGray-700">
-          You will no longer receive annual report reminders. If you forget to file your annual
-          report on time, your business will no longer be in good standing and may be dissolved.
-        </p>
-      </div>
-      <template v-if="!isAuthorized(AuthorizedActionsE.NO_CONTACT_INFO)">
-        <p>
-          If you need help, please contact us.
-        </p>
-        <BcrosContactInfo :contacts="getContactInfo('registries')" class="mt-5" />
-      </template>
 
-      <!-- TODO: add error message in case of failure to save -->
+        <div class="flex items-center justify-between">
+          <p class="text-bcGovGray-600">
+            {{ $t('text.dialog.annualReportReminders.text1') }}
+          </p>
+
+          <label for="toggle" class="font-bold">
+            {{ $t(!!arReminder
+              ? 'text.dialog.annualReportReminders.emailsChecked'
+              : 'text.dialog.annualReportReminders.emailsUnchecked'
+            ) }}
+          </label>
+
+          <div class="w-10 h-5">
+            <UIcon
+              v-if="isSaving"
+              class="text-2xl text-gray-700 animate-spin"
+              name="i-mdi-loading"
+            />
+            <UToggle
+              v-else
+              id="toggle"
+              v-model="isToggled"
+              on-icon="i-heroicons-check-20-solid"
+              off-icon="i-heroicons-x-mark-20-solid"
+              color="blue"
+              :ui="{
+                inactive: 'bg-[#757575]',
+                icon: { off: 'text-[#757575]' }
+              }"
+              @change="save()"
+            />
+          </div>
+        </div>
+
+        <p class="text-red-500 text-sm text-right h-6">
+          {{ isSaveError ? $t('text.dialog.annualReportReminders.unableToSave') : '' }}
+        </p>
+      </div>
+
+      <div v-if="arReminder">
+        <UDivider class="mt-2" />
+
+        <!-- current email address -->
+        <div class="mt-7">
+          <h2 class="text-base">
+            {{ $t('text.dialog.annualReportReminders.section2') }}
+          </h2>
+          <p class="text-bcGovGray-600">
+            {{ $t('text.dialog.annualReportReminders.text2') }}
+          </p>
+          <p class="tracking-wide">
+            {{ currentBusinessContact.email }}
+          </p>
+        </div>
+      </div>
+
+      <!-- message box -->
+      <div v-else>
+        <BcrosMessageBox color="red" class="mt-6">
+          <div class="flex items-start gap-3">
+            <UIcon
+              class="text-5xl text-yellow-500"
+              name="i-mdi-warning"
+            />
+            <span>
+              {{ $t('text.dialog.annualReportReminders.messageBoxText') }}
+            </span>
+          </div>
+        </BcrosMessageBox>
+      </div>
     </template>
 
     <template #buttons>
-      <div class="flex justify-center gap-5">
+      <div class="flex justify-center mt-2">
         <UButton
-          variant="outline"
-          class="px-10 py-2"
+          class="py-2 min-w-24 flex justify-center"
+          :disabled="isSaving"
           @click="close()"
         >
-          {{ $t('button.dialog.cancel') }}
-        </UButton>
-        <UButton
-          class="px-10 py-2"
-          data-cy="dissolution-button"
-          @click="save()"
-        >
-          {{ $t('button.dialog.save') }}
+          <UIcon
+            v-if="isSaving"
+            class="text-2xl text-white animate-spin"
+            name="i-mdi-loading"
+          />
+          <div v-else class="text-base">
+            {{ $t('button.dialog.done') }}
+          </div>
         </UButton>
       </div>
     </template>
   </BcrosDialog>
 </template>
-
-<style scoped>
-/*** TODO remove if not needed ***/
-</style>

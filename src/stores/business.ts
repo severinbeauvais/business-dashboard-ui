@@ -2,6 +2,7 @@ import { StatusCodes } from 'http-status-codes'
 import { CorpTypeCd, FilingTypes } from '@bcrs-shared-components/enums'
 import type { CommentIF } from '@bcrs-shared-components/interfaces'
 import type { BusinessI, StateFilingI } from '~/interfaces/business-i'
+import { AllowedActionsE } from '~/enums/allowable-actions-e'
 import { FilingSubTypeE } from '~/enums/filing-sub-type-e'
 import { getBusinessConfig } from '~/utils/business-config'
 import { useBcrosLegalApi } from '~/composables/useBcrosLegalApi'
@@ -251,9 +252,16 @@ export const useBcrosBusiness = defineStore('bcros/business', () => {
     return isTypeRestorationLimited.value || isTypeRestorationLimitedExtension.value
   })
 
-  const isAllowedToFile = (filingType: FilingTypes, filingSubType?: FilingSubTypeE) => {
+  const isAllowedToFile = (filingType: FilingTypes | AllowedActionsE, filingSubType?: FilingSubTypeE) => {
     if (!filingType || !currentBusiness.value?.allowedActions?.filing) {
       return false
+    }
+    if (filingType === AllowedActionsE.AR_REMINDERS) {
+      return true // *** TODO: use line below when API returns arReminder
+      return !!currentBusiness.value.allowedActions.arReminder
+    }
+    if (filingType === AllowedActionsE.DIGITAL_BUSINESS_CARD) {
+      return !!currentBusiness.value.allowedActions.digitalBusinessCard
     }
     const requestedFiling = currentBusiness.value.allowedActions.filing.filingTypes
       .find(ft => ft.name === filingType && (filingSubType === undefined || ft.type === filingSubType))

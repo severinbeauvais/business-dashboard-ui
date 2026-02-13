@@ -58,6 +58,7 @@
     "dialog": {
       "delete": "Delete",
       "cancel": "Cancel",
+      "done": "Done",
       "dontDelete": "Don't Delete",
       "cancelPayment": "Cancel Payment",
       "dontCancelPayment": "Don't Cancel",
@@ -320,7 +321,9 @@
         "text1": "A reminder to file your annual report before the due date",
         "text2": "Reminders are sent to the registered office email address:",
         "emailsChecked": "Emails On",
-        "emailedUnchecked": "Emails Off"
+        "emailsUnchecked": "Emails Off",
+        "unableToSave": "Unable to save your change",
+        "messageBoxText": "You will not receive annual report reminders. If you forget to file your annual report on time, your business will no longer be in good standing and may be dissolved."
       }
     },
     "todoItem": {

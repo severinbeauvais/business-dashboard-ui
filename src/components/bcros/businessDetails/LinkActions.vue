@@ -5,6 +5,7 @@ import { FilingTypes } from '@bcrs-shared-components/enums'
 import { FilingSubTypeE } from '~/enums/filing-sub-type-e'
 import { useBcrosDashboardActions } from '~/stores/dashboardActions'
 import { LDFlags } from '~/enums/ld-flags'
+import { AllowedActionsE } from '~/enums/allowable-actions-e'
 
 const { currentBusiness } = storeToRefs(useBcrosBusiness())
 const { goToBusinessCorpsUI, goToDigitalCredentialsPage, goToFilingsUI } = useBcrosNavigate()
@@ -29,7 +30,7 @@ const allActions1: ComputedRef<Array<MenuActionItem>> = computed(() => {
   return [
     { // <!-- View/Add Digital Credentials -->
       showButton:
-        !!currentBusiness.value?.allowedActions?.digitalBusinessCard &&
+        isAllowedToFile(AllowedActionsE.DIGITAL_BUSINESS_CARD) &&
         getStoredFlag(LDFlags.EnableDigitalCredentials),
       disabled: false,
       label: t('button.tombstone.menuAction.digitalCredentials'),
@@ -152,7 +153,8 @@ const allActions1: ComputedRef<Array<MenuActionItem>> = computed(() => {
           ? t('tooltip.tombstone.menuAction.isNotFrozenForAmalgamate')
           : t('tooltip.tombstone.menuAction.amalgamate'),
       name: 'amalgamate'
-    }]
+    }
+  ]
 })
 
 /** Second set of actions. */
@@ -161,7 +163,8 @@ const allActions2: ComputedRef<Array<MenuActionItem>> = computed(() => {
     { // <!-- Annual Report Reminders -->
       showButton:
         getStoredFlag(LDFlags.EnableAnnualReportReminders) &&
-        isAuthorized(AuthorizedActionsE.AR_REMINDER_OPT_OUT),
+        isAuthorized(AuthorizedActionsE.AR_REMINDER_OPT_OUT) &&
+        isAllowedToFile(AllowedActionsE.AR_REMINDERS),
       disabled: false,
       label: t('button.tombstone.menuAction.annualReportReminders'),
       click: () => {
@@ -170,7 +173,8 @@ const allActions2: ComputedRef<Array<MenuActionItem>> = computed(() => {
       },
       tooltip: t('tooltip.tombstone.menuAction.annualReportReminders'),
       name: 'annualReportReminders'
-    }]
+    }
+  ]
 })
 
 /** The combined list of visible actions, separated by a divider. */
